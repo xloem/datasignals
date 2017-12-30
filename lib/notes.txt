@@ -1,0 +1,8 @@
+USEFUL:
+	- Vector of 1-dimensional Data, with a roughly constant samplerate, may be sparse
+
+GENERAL:
+	- Vector of n-dimensional Data
+	- Set of datapoints, each with the same number of values and the same number of coordinates
+		- backends for these data, norms for storing them
+

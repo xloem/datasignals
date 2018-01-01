@@ -9,30 +9,32 @@ namespace lib {
  * Generalizes the concept of a set of data, which all has the same dimension and the same type.
  * May be an ordered dense vector of sampled values over time,
  * or may be a sparse set of rare events from multiple spots in images taken from multiple devices at a different time each.
- *
- * Dimensions and Channels are std::tuples specifying the number and types of each property.
  */
-template <typename Dimensions, typename Channels>
+template <typename _Sample, typename ..._Dimensions>
 class DataVector
 {
 public:
-	/* type of a given channel index */
-	template <std::size_t channel>
-	using Channel = typename std::tuple_element<channel, Channels>::type;
+	/* type of a single sample */
+	using Sample = _Sample;
+
+	/* type of Dimensions */
+	using Dimensions = std::tuple<_Dimensions...>;
+
+	/* type of a given dimension index */
+	template <std::size_t dimension>
+	using Dimension = typename std::tuple_element<dimension, Dimensions>::type;
+
+	/* number of dimensions */
+	static constexpr std::size_t dimensions = sizeof...(_Dimensions);
 
 	/* a single data point */
-	virtual Channels get(Dimensions at) = 0;
+	virtual Sample get(Dimensions at) = 0;
 
-	class Iterator
-	{
-	public:
-		virtual Iterator& ++operator() = 0;
-		virtual Channels const & operator*() = 0;
-		virtual bool operator !=(Iterator &) = 0;
-	};
+	/* smallest coordinates present in data */
+	virtual Dimensions lowerBound() = 0;
 
-	Iterator begin();
-	Iterator end();
+	/* largest coordinates present in data */
+	virtual Dimensions upperBound() = 0;
 };
 
 /*

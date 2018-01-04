@@ -1,6 +1,0 @@
-Let's change the lib so that it doesn't require the standard library,
-for compatibility with arduino.
-
-This probably means the tuples will go away.
-
-It's okay to have all the dimensions be the same type.

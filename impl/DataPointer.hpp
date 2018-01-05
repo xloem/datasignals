@@ -55,9 +55,6 @@ private:
 	Dimensions const lower;
 	Dimensions range;
 	Indices count;
-	//lib::util::Tuple<lib::util::Uniform<lib::util::Index, SubframeDimensionTypes...>> & subframesCount;
-	//util::Tuple<lib::util::Uniform<lib::util::Index, subframeDimensionTypes...>> storageIndexs;
-	//lib::util::Index frameCount;
 	lib::util::Index frameReserved;
 };
 
@@ -70,7 +67,12 @@ namespace datas {
 namespace impl {
 
 template <typename SampleType, typename FrameDimensionType, typename... SubframeDimensionTypes>
-DataPointer<SampleType, FrameDimensionType, SubframeDimensionTypes...>::DataPointer(Dimensions lowerBound, Indices count, Dimensions upperBound, Sample * initialData, lib::util::Index maxSamples)
+DataPointer<SampleType, FrameDimensionType, SubframeDimensionTypes...>::DataPointer(
+	Dimensions lowerBound,
+	Indices count,
+	Dimensions upperBound,
+	Sample * initialData,
+	lib::util::Index maxSamples)
 : back(initialData),
   lower(lowerBound),
   range{lowerBound.map([](auto &lower, auto &upper)
@@ -80,10 +82,11 @@ DataPointer<SampleType, FrameDimensionType, SubframeDimensionTypes...>::DataPoin
   count{count}
 {
 	reseat(initialData, maxSamples);
-	lib::util::Index frames = count.template get<0>();
+
 	range.template get<0>() = 0;
 	this->count.template get<0>() = 0;
-	grow(frames, upperBound.template get<0>());
+
+	grow(count.template get<0>(), upperBound.template get<0>());
 }
 
 template <typename SampleType, typename FrameDimensionType, typename... SubframeDimensionTypes>

@@ -82,8 +82,8 @@ DataPointer<SampleType, FrameDimensionType, SubframeDimensionTypes...>::DataPoin
 	reseat(initialData, maxSamples);
 	lib::util::Index frames = count.template get<0>();
 	range.template get<0>() = 0;
-	count.template get<0>() = 0;
-	grow(count.template get<0>(), upperBound.template get<0>());
+	this->count.template get<0>() = 0;
+	grow(frames, upperBound.template get<0>());
 }
 
 template <typename SampleType, typename FrameDimensionType, typename... SubframeDimensionTypes>
@@ -97,33 +97,36 @@ void DataPointer<SampleType, FrameDimensionType, SubframeDimensionTypes...>::res
 template <typename SampleType, typename FrameDimensionType, typename... SubframeDimensionTypes>
 lib::util::Index DataPointer<SampleType, FrameDimensionType, SubframeDimensionTypes...>::samplesPerFrame() const
 {
-	return count.shift().accumulate([](auto &product, auto &next)
+	return count.shift().foldl([](auto const & product, auto const & next)
 	{
 		return product * next;
-	});
+	}, 1);
 }
 
 template <typename SampleType, typename FrameDimensionType, typename... SubframeDimensionTypes>
 lib::util::Index DataPointer<SampleType, FrameDimensionType, SubframeDimensionTypes...>::grow(lib::util::Index count, Dimension<0> newUpperBound)
 {
 	if (this->count.template get<0>() + count > frameReserved) {
-		count = frameReserved;
+		count = frameReserved - this->count.template get<0>();
 	}
 
-	std::get<0>(range) = newUpperBound - std::get<0>(lower);
+	range.template get<0>() = newUpperBound - lower.template get<0>();
 
 	this->count.template get<0>() += count;
+
+	return count;
 }
 
 template <typename SampleType, typename FrameDimensionType, typename... SubframeDimensionTypes>
 SampleType DataPointer<SampleType, FrameDimensionType, SubframeDimensionTypes...>::get(Dimensions at)
 {
-	Indices indices = lowerBound.map([](auto &lower, auto &upper, auto &count, auto &at)
+	Indices indices = count.map([](auto &count, auto &lower, auto &range, auto &at)
+	-> lib::util::Index
 	{
-		return (at - lower) * count / (upper - lower);
-	}, upperBound, count, at);
+		return (at - lower) * count / range;
+	}, lower, range, at);
 
-	return get(indices);
+	return getIndex(indices);
 }
 
 template <typename SampleType, typename FrameDimensionType, typename... SubframeDimensionTypes>
@@ -134,10 +137,10 @@ SampleType & DataPointer<SampleType, FrameDimensionType, SubframeDimensionTypes.
 	 * coord = index3 * 1 + index2 * 1 * size3 + index1 * 1 * size3 * size2 + index0 * 1 * size3 * size2 * size1
 	 * coord = 1 * (index3 + size3 * (index2 + size2 * (index1 + size1 * (index0 + size0 * 0))))
 	 */
-	lib::util::Index coord = count.accumulateRight([](lib::util::Index previous, lib::util::Index index, lib::util::Index size)
+	lib::util::Index coord = at.foldr([](lib::util::Index previous, lib::util::Index index, lib::util::Index size)
 	{
 		return previous * size + index;
-	}, 0, at);
+	}, 0, count);
 
 	return back[coord];
 }
@@ -146,7 +149,7 @@ template <typename SampleType, typename FrameDimensionType, typename... Subframe
 auto DataPointer<SampleType, FrameDimensionType, SubframeDimensionTypes...>::upperBound() -> Dimensions
 {
 	return lower.map([](auto& lower, auto& range) {
-		lower + range;
+		return lower + range;
 	}, range);
 }
 

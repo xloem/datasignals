@@ -11,4 +11,5 @@ int main()
 	DataPointer<float, float, float> data({-1,-1}, {2, 2}, {1, 1}, back.data(), back.size());
 
 	std::cout << data.get({0.0f,0.0f}) << std::endl;
+	std::cout << data.getIndex({0,0}) << std::endl;
 }

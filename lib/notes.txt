@@ -5,4 +5,87 @@ GENERAL:
 	- Vector of n-dimensional Data
 	- Set of datapoints, each with the same number of values and the same number of coordinates
 		- backends for these data, norms for storing them
+  - Data With Holes:
+    - just dense data using a value type that can represent holes, e.g. NaN for floats
+    - can expand to other value types: e.g. metadata, multiple-values, ranges, confidences
+  - Metadata:
+    - may apply to entire datagroups, to sections of datagroups, or to individual datapoints
+    - some sensor metadata is the same for huge swaths of data or en
 
+DataGroup / SparseData:
+  - sparse generalizations:
+    - iterate over an axis
+    - downcast to dense?
+    - metadata applying to whole block?
+
+DenseDataGroup : DataGroup / DenseData : SparseData:
+  - adds dense generalizations
+    - size and resolution types are templated, may be compile-time or run-time numbers
+      - passed in constructor, or inferred via a factory function for conciseness
+    - get a pointer to block of data in storage order
+    - fill a pointer with block of data in provided order
+
+Grouped data:
+  - inherits from SparseData and wraps a set of subdata blocks, some of which may be dense, but are sparsely grouped
+
+
+Analysis Algorithms:
+  - common interface for iterating parameters that can be tweaked to see how results change
+  - common interface for providing blocks of data to operate over, probably different implementations for different shapes of data (sparse, dense)
+
+== Messy ==
+
+NamedValueMap?:
+  - for metadata
+  - many instances, same set of keys
+  - content information concepts:
+    - numeric id to refer to within the map
+    - string id, small, names numeric id?
+    - string id or long numeric id, unique global identifier? is this useful?
+  - use concepts:
+    - datapoints may share metadata for each point? or is this just multiple values?
+      - sensor recorded with -> shared across block
+      - time recorded -> multiple value?
+      - value recorded -> multiple value
+      - duration of sampling -> kind of value-specific metadata, usually shared across the block though
+    - blocks may have metadata specific to block 
+  - keys have string names and unique ids
+  - ids can be used for representing rapidly inside the system
+  - when written / read can use 
+
+Value Use Cases:
+  Record keystrokes:
+    Datablocks:
+      - sparse keypresses
+        - values:
+          - key id
+          - associated key release?
+          - whether press or release?
+      - sparse keyreleases, 
+        - should be intertwined with keypresses as _most but not all_ will be paired
+      - sparse recording times, log outputs, 
+    Value-specific:
+      Really here we have 3 underlying pieces of data that a number of values can be viewed from:
+        - time of key release
+        - time of key press
+        - duration of key press
+        - which key pressed
+        - center time of key press
+      This is all value data.  Not really metadata.  Metadata is not value-specific here.
+    Value-shared:
+      - what keyboard
+      - what recording software
+      - what system the keyboard is attached to
+      - version of recording software
+      - time software is booted
+      - time software stops
+    Sparse:
+      - hiccup in software, periods of data loss
+    Other:
+      Say there's a problem.  Either there is a delay in the recording pipeline somewhere and this is known, or recording halts for some time,
+      and this is known.  This is additional metadata that doesn't match the values.
+      This makes it seem there could be side-streams with different values.  
+    Tangential:
+      - what time periods does the recording occupy.  Is it halted at some time?
+        Because we could stop recording and start recording at 
+      - where is the keyboard
